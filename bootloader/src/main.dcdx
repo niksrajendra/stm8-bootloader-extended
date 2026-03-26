@@ -1,0 +1,64 @@
+/* MAIN.C file
+ * 
+ * Copyright (c) 2002-2005 STMicroelectronics
+ */
+
+//#include "STM8S003F3P.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdint.h>
+#include "../include/stm8s003.h"
+#include "../include/uart.h"
+#include "../include/adc.h"
+
+void myDelay(void);
+//int putch( str);
+
+int putchar(int str)
+{
+	uart_write(str);
+	return 0;
+}
+
+void myDelay()
+{
+	int i,j;
+	for(i=0;i<1000;i++)
+	{
+		for(j=0;j<500;j++)
+		{
+		}
+	}
+}
+
+void hse_enable() {
+    /* Enable HSE crystal oscillator */
+    CLK_ECKR |= 0x01;
+    while (!(CLK_ECKR & 0x02));
+    /* Switch master clock to HSE */
+    CLK_SWR = 0xB4;
+    while (!(CLK_SWCR & (1 << 3)));
+    CLK_SWCR |= (1 << 1);
+}
+
+main()
+{
+	uint16_t result = 0;
+	PC_DDR |= 0x08;
+	PC_CR1 |= 0x08;
+	PC_CR2 |= 0x08;
+	hse_enable();
+	uart_init(115200);
+	adc_init(3);
+	while (1)
+	{
+		PC_ODR |=1<<3;
+		//uart_write(0x55);
+		//uart_write(0xAA);
+		result = adc_read();
+		printf("ADC value is %d\n",result);
+		myDelay();
+		PC_ODR &=~(1<<3);
+		myDelay();
+	}
+}
