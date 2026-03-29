@@ -1,7 +1,12 @@
 #ifndef BOOTLOADER_H
 #define BOOTLOADER_H
 
-#define BLOCK_SIZE      64
+#ifdef STM8S_003_H
+    #define BLOCK_SIZE      64
+#else
+    #define BLOCK_SIZE      128
+#endif
+
 #define BOOT_ADDR       0x8400
 
 void bootloader_exec(void);

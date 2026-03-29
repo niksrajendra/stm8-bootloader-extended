@@ -1,5 +1,5 @@
-#ifndef STM8S_H
-#define STM8S_H
+#ifndef STM8S_003_H
+#define STM8S_003_H
 
 #define _SFR_(mem_addr)             (*(volatile uint8_t *)(0x5000 + (mem_addr)))
 #define _CFR_(mem_addr)				(*(volatile uint8_t *)(0x7F00 + (mem_addr)))
