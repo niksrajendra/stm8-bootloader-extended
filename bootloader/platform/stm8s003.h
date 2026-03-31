@@ -2,6 +2,7 @@
 #define STM8S_003_H
 
 #define _SFR_(mem_addr)             (*(volatile uint8_t *)(0x5000 + (mem_addr)))
+#define _SFR16_(mem_addr)           (*(volatile uint16_t *)(0x5000 + (mem_addr)))  
 #define _CFR_(mem_addr)				(*(volatile uint8_t *)(0x7F00 + (mem_addr)))
 #define _OPTION_BYTE_(mem_addr)		(*(volatile uint8_t *)(0x4800 + (mem_addr)))
 

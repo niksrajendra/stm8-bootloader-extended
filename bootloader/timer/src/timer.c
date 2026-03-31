@@ -38,3 +38,21 @@ void timerS(uint16_t value)
 
     }
 }
+
+/**
+ * Initialize watchdog:
+ * prescaler = 32, timeout = 63.70ms
+ */
+void iwdg_init(void) {
+    IWDG_KR = IWDG_KEY_ENABLE;
+    IWDG_KR = IWDG_KEY_ACCESS;
+    IWDG_PR = 2;
+    IWDG_KR = IWDG_KEY_REFRESH;
+}
+
+/**
+ * Kick the dog
+ */
+void iwdg_refresh() {
+    IWDG_KR = IWDG_KEY_REFRESH;
+}

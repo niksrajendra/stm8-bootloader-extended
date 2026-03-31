@@ -10,9 +10,9 @@ void SPI_init(uint32_t clock, SpiMode mode, uint16_t buadrate)
     GPIOSetMode(GPIOD, 6, OUTPUT_PUSHPULL); // MISO
     GPIOSetMode(GPIOD, 7, OUTPUT_PUSHPULL); // MOSI
     #elif defined(STM8S_005_H)
-    GPIOSetMode(GPIOC, 3, OUTPUT_PUSHPULL); // SCK
-    GPIOSetMode(GPIOC, 4, OUTPUT_PUSHPULL); // MISO
-    GPIOSetMode(GPIOC, 5, OUTPUT_PUSHPULL); // MOSI 
+    GPIOSetMode(GPIOC, 5, OUTPUT_PUSHPULL); // SCK
+    GPIOSetMode(GPIOC, 7, OUTPUT_PUSHPULL); // MISO
+    GPIOSetMode(GPIOC, 6, OUTPUT_PUSHPULL); // MOSI 
     #endif
     CLK_PCKENR1 |= 0x02u; // Enable SPI clock
     switch(mode)

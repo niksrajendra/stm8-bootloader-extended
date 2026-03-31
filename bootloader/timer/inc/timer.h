@@ -15,4 +15,7 @@ void timerUs(uint16_t value);
 void timerMs(uint16_t value);
 void timerS(uint16_t value);
 
+void iwdg_init(void);
+void iwdg_refresh(void);
+
 #endif // TIMER_H
