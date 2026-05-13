@@ -47,9 +47,12 @@ typedef struct
 #define  GPIOA (volatile gpioReg*)0x5000u
 #define  GPIOB (volatile gpioReg*)0x5005u
 #define  GPIOC (volatile gpioReg*)0x500Au
-#define  GPIOD (volatile gpioReg*)0x500Eu
+#define  GPIOD (volatile gpioReg*)0x500Fu
 #define  GPIOE (volatile gpioReg*)0x5014u
 #define  GPIOF (volatile gpioReg*)0x5019u
+#define  GPIOG (volatile gpioReg*)0x501Eu
+#define  GPIOH (volatile gpioReg*)0x5023u
+#define  GPIOI (volatile gpioReg*)0x5028u
 
 
 void GPIOSetMode(gpioReg *port, uint8_t pinNum, GPIOmode mode);
