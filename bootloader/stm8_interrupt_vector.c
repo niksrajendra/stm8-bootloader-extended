@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <timer.h>
 
+void uart_isr(void) __interrupt(UART1_TXC_ISR);
 void adc1_isr(void) __interrupt(ADC1_ISR);
 void tim4_isr(void) __interrupt(TIM4_ISR);
 
@@ -67,6 +68,11 @@ void handler(void) __trap
 }
 
 void reset_isr(void) __interrupt(0u)
+{
+
+}
+
+void uart_isr(void) __interrupt(UART1_TXC_ISR)
 {
 
 }

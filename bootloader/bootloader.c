@@ -5,6 +5,10 @@
 #include <uart.h>
 #include <timer.h>
 #include "bootloader.h"
+#include "stm8_interrupt_vector.h"
+
+
+
 
 static uint8_t CRC;
 static uint8_t ivt[128];
@@ -169,7 +173,7 @@ inline void ram_cpy() {
         f_ram[i] = ((uint8_t *) ram_flash_write_block)[i];
 }
 
-void bootloader_main() {
+void main() {
 	hse_enable();
     BOOT_PIN_CR1 = 1 << BOOT_PIN;
     if (!(BOOT_PIN_IDR & (1 << BOOT_PIN))) {
