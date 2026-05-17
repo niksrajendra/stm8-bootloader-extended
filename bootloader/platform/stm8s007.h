@@ -1,8 +1,7 @@
-#ifndef STM8S_003_H
-#define STM8S_003_H
+#ifndef STM8S_005_H
+#define STM8S_005_H
 
 #define _SFR_(mem_addr)             (*(volatile uint8_t *)(0x5000 + (mem_addr)))
-#define _SFR16_(mem_addr)           (*(volatile uint16_t *)(0x5000 + (mem_addr)))  
 #define _CFR_(mem_addr)				(*(volatile uint8_t *)(0x7F00 + (mem_addr)))
 #define _OPTION_BYTE_(mem_addr)		(*(volatile uint8_t *)(0x4800 + (mem_addr)))
 
@@ -47,6 +46,27 @@
 #define PF_DDR			            _SFR_(0x1B)
 #define PF_CR1			            _SFR_(0x1C)
 #define PF_CR2			            _SFR_(0x1D)
+
+/* PORT G */
+#define PG_ODR			            _SFR_(0x1E)
+#define PG_IDR			            _SFR_(0x1F)
+#define PG_DDR			            _SFR_(0x20)
+#define PG_CR1			            _SFR_(0x21)
+#define PG_CR2			            _SFR_(0x22)
+
+/* PORT H */
+#define PH_ODR			            _SFR_(0x23)
+#define PH_IDR			            _SFR_(0x24)
+#define PH_DDR			            _SFR_(0x25)
+#define PH_CR1			            _SFR_(0x26)
+#define PH_CR2			            _SFR_(0x27)
+
+/* PORT I */
+#define PI_ODR			            _SFR_(0x28)
+#define PI_IDR			            _SFR_(0x29)
+#define PI_DDR			            _SFR_(0x2A)
+#define PI_CR1			            _SFR_(0x2B)
+#define PI_CR2			            _SFR_(0x2C)
 
 /* FLASH */
 #define FLASH_CR1		            _SFR_(0x5A)
@@ -120,20 +140,30 @@
 #define I2C_CCRL		            _SFR_(0x21B)
 #define I2C_CCRH		            _SFR_(0x21C)
 #define I2C_TRISER		            _SFR_(0x21D)
-#define I2C_PECR		            _SFR_(0x21E)
 
 /* UART1 */
-#define UART1_SR		            _SFR_(0x230)
-#define UART1_DR		            _SFR_(0x231)
-#define UART1_BRR1		            _SFR_(0x232)
-#define UART1_BRR2		            _SFR_(0x233)
-#define UART1_CR1		            _SFR_(0x234)
-#define UART1_CR2		            _SFR_(0x235)
-#define UART1_CR3		            _SFR_(0x236)
-#define UART1_CR4		            _SFR_(0x237)
-#define UART1_CR5		            _SFR_(0x238)
-#define UART1_GTR		            _SFR_(0x239)
-#define UART1_PSCR		            _SFR_(0x23A)
+#define UART1_SR                    _SFR_(0x230)
+#define UART1_DR                    _SFR_(0x231)
+#define UART1_BRR1                  _SFR_(0x232)
+#define UART1_BRR2                  _SFR_(0x233)
+#define UART1_CR1                   _SFR_(0x234)
+#define UART1_CR2                   _SFR_(0x235)
+#define UART1_CR3                   _SFR_(0x236)
+#define UART1_CR4                   _SFR_(0x237)
+#define UART1_CR5                   _SFR_(0x238)
+#define UART1_GTR                   _SFR_(0x239)
+#define UART1_PSCR                  _SFR_(0x23A)
+
+/* UART3 */
+#define UART3_SR                    _SFR_(0x240)
+#define UART3_DR                    _SFR_(0x241)
+#define UART3_BRR1                  _SFR_(0x242)
+#define UART3_BRR2                  _SFR_(0x243)
+#define UART3_CR1                   _SFR_(0x244)
+#define UART3_CR2                   _SFR_(0x245)
+#define UART3_CR3                   _SFR_(0x246)
+#define UART3_CR4                   _SFR_(0x247)
+#define UART3_CR6                   _SFR_(0x249)
 
 /* TIM1 */
 #define TIM1_CR1		            _SFR_(0x250)
@@ -171,37 +201,56 @@
 
 /* TIM2 */
 #define TIM2_CR1		            _SFR_(0x300)
-#define TIM2_IER		            _SFR_(0x303)
-#define TIM2_SR1		            _SFR_(0x304)
-#define TIM2_SR2		            _SFR_(0x305)
-#define TIM2_EGR		            _SFR_(0x306)
-#define TIM2_CCMR1		            _SFR_(0x307)
-#define TIM2_CCMR2		            _SFR_(0x308)
-#define TIM2_CCMR3		            _SFR_(0x309)
-#define TIM2_CCER1		            _SFR_(0x30A)
-#define TIM2_CCER2		            _SFR_(0x30B)
-#define TIM2_CNTRH		            _SFR_(0x30C)
-#define TIM2_CNTRL		            _SFR_(0x30D)
-#define TIM2_PSCR		            _SFR_(0x30E)
-#define TIM2_ARRH		            _SFR_(0x30F)
-#define TIM2_ARRL		            _SFR_(0x310)
-#define TIM2_CCR1H		            _SFR_(0x311)
-#define TIM2_CCR1L		            _SFR_(0x312)
-#define TIM2_CCR2H		            _SFR_(0x313)
-#define TIM2_CCR2L		            _SFR_(0x314)
-#define TIM2_CCR3H		            _SFR_(0x315)
-#define TIM2_CCR3L		            _SFR_(0x316)
+#define TIM2_IER		            _SFR_(0x301)
+#define TIM2_SR1		            _SFR_(0x302)
+#define TIM2_SR2		            _SFR_(0x303)
+#define TIM2_EGR		            _SFR_(0x304)
+#define TIM2_CCMR1		            _SFR_(0x305)
+#define TIM2_CCMR2		            _SFR_(0x306)
+#define TIM2_CCMR3		            _SFR_(0x307)
+#define TIM2_CCER1		            _SFR_(0x308)
+#define TIM2_CCER2		            _SFR_(0x309)
+#define TIM2_CNTRH		            _SFR_(0x30A)
+#define TIM2_CNTRL		            _SFR_(0x30B)
+#define TIM2_PSCR		            _SFR_(0x30C)
+#define TIM2_ARRH		            _SFR_(0x30D)
+#define TIM2_ARRL		            _SFR_(0x30E)
+#define TIM2_CCR1H		            _SFR_(0x30F)
+#define TIM2_CCR1L		            _SFR_(0x310)
+#define TIM2_CCR2H		            _SFR_(0x311)
+#define TIM2_CCR2L		            _SFR_(0x312)
+#define TIM2_CCR3H		            _SFR_(0x313)
+#define TIM2_CCR3L		            _SFR_(0x314)
+
+/* TIM3 */
+#define TIM3_CR1                    _SFR_(0x320)
+#define TIM3_IER                    _SFR_(0x321)
+#define TIM3_SR1                    _SFR_(0x322)
+#define TIM3_SR2                    _SFR_(0x323)
+#define TIM3_EGR                    _SFR_(0x324)
+#define TIM3_CCMR1                  _SFR_(0x325)
+#define TIM3_CCMR2                  _SFR_(0x326) 
+#define TIM3_CCER1                  _SFR_(0x327) 
+#define TIM3_CNTRH                  _SFR_(0x328)
+#define TIM3_CNTRL                  _SFR_(0x329)
+#define TIM3_PSCR                   _SFR_(0x32A)
+#define TIM3_ARRH                   _SFR_(0x32B)
+#define TIM3_ARRL                   _SFR_(0x32C)
+#define TIM3_CCR1H                  _SFR_(0x32D)
+#define TIM3_CCR1L                  _SFR_(0x32E)
+#define TIM3_CCR2H                  _SFR_(0x32F)
+#define TIM3_CCR2L                  _SFR_(0x330)
 
 /* TIM4 */
 #define TIM4_CR1		            _SFR_(0x340)
-#define TIM4_IER		            _SFR_(0x343)
-#define TIM4_SR			            _SFR_(0x344)
-#define TIM4_EGR		            _SFR_(0x345)
-#define TIM4_CNTR		            _SFR_(0x346)
-#define TIM4_PSCR		            _SFR_(0x347)
-#define TIM4_ARR		            _SFR_(0x348)
+#define TIM4_IER		            _SFR_(0x341)
+#define TIM4_SR			            _SFR_(0x342)
+#define TIM4_EGR		            _SFR_(0x343)
+#define TIM4_CNTR		            _SFR_(0x344)
+#define TIM4_PSCR		            _SFR_(0x345)
+#define TIM4_ARR		            _SFR_(0x346)
 
-/* ADC1 */
+/* ADC2 */
 #define ADC_CSR			            _SFR_(0x400)
 #define ADC_CR1			            _SFR_(0x401)
 #define ADC_CR2			            _SFR_(0x402)
@@ -210,14 +259,6 @@
 #define ADC_DRL			            _SFR_(0x405)
 #define ADC_TDRH		            _SFR_(0x406)
 #define ADC_TDRL		            _SFR_(0x407)
-#define ADC_HTRH		            _SFR_(0x408)
-#define ADC_HTRL		            _SFR_(0x409)
-#define ADC_LTRH		            _SFR_(0x40A)
-#define ADC_LTRL		            _SFR_(0x40B)
-#define ADC_AWSRH		            _SFR_(0x40C)
-#define ADC_AWSRL		            _SFR_(0x40D)
-#define ADC_AWCRH		            _SFR_(0x40E)
-#define ADC_AWCRL		            _SFR_(0x40F)
 
 /* CPU */
 #define A				            _CFR_(0x000)
@@ -271,6 +312,12 @@
 #define NOPT4			            _OPTION_BYTE_(0x08)
 #define OPT5			            _OPTION_BYTE_(0x09)
 #define NOPT5			            _OPTION_BYTE_(0x0A)
+#define OPT6			            _OPTION_BYTE_(0x0B)
+#define NOPT6			            _OPTION_BYTE_(0x0C)
+#define OPT7			            _OPTION_BYTE_(0x0D)
+#define NOPT7			            _OPTION_BYTE_(0x0E)
+#define OPTBL			            _OPTION_BYTE_(0x7E)
+#define NOPTBL			            _OPTION_BYTE_(0x7F)
 
 /* Interrupts */
 #define TLI_ISR                     0
@@ -286,25 +333,29 @@
 #define TIM1_CC_ISR                 12
 #define TIM2_OVF_ISR                13
 #define TIM2_CC_ISR                 14
+#define TIM3_OVF_ISR                15
+#define TIM3_CC_ISR                 16
 #define UART1_TXC_ISR               17
 #define UART1_RXC_ISR               18
 #define I2C_ISR                     19
-#define ADC1_ISR                    22
+#define UART3_TXC_ISR               20
+#define UART3_RXC_ISR               21
+#define ADC2_ISR                    22
 #define TIM4_ISR                    23
 #define FLASH_ISR                   24
 
 #define FLASH_PAGE_COUNT            128u
-#define FLASH_PAGE_SIZE             64u
-#define FLASH_PAGE_BLOCK_COUNT      1u
-#define FLASH_BLOCK_SIZE            64u
+#define FLASH_PAGE_SIZE             512u
+#define FLASH_PAGE_BLOCK_COUNT      4u
+#define FLASH_BLOCK_SIZE            128u
 #define EEPROM_PAGE_COUNT           2u
 #define EEPROM_PAGE_SIZE            64u
 #define EEPROM_PAGE_BLOCK_COUNT     1u
 #define EEPROM_BLOCK_SIZE           64u
 #define RAM_START                   0x00000000u
-#define RAM_END                     0x000003FFu
+#define RAM_END                     0x000017FFu
 #define FLASH_START                 0x00008000u
-#define FLASH_END                   0x00009FFFu
+#define FLASH_END                   0x00017FFFu
 #define EEPROM_START                0x00004000u
 #define EEPROM_END                  0x0000407Fu
 

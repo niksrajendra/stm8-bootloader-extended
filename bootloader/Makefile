@@ -62,4 +62,4 @@ clean:
 	rm -rf $(OBJS) $(ASMS) $(LSTS) $(SYMS) $(RSTS) $(BUILD_DIR)/$(EXECUTABLE).hex
 	
 flash:
-	stm8flash -c stlinkv2 -pstm8s003f3 -w $(BUILD_DIR)/$(EXECUTABLE).hex
+	stm8flash -c stlinkv2 -p$(MCU) -w $(BUILD_DIR)/$(EXECUTABLE).hex

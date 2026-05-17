@@ -341,6 +341,21 @@
 #define TIM4_ISR                    23
 #define FLASH_ISR                   24
 
+#define FLASH_PAGE_COUNT            64u
+#define FLASH_PAGE_SIZE             512u
+#define FLASH_PAGE_BLOCK_COUNT      4u
+#define FLASH_BLOCK_SIZE            128u
+#define EEPROM_PAGE_COUNT           2u
+#define EEPROM_PAGE_SIZE            64u
+#define EEPROM_PAGE_BLOCK_COUNT     1u
+#define EEPROM_BLOCK_SIZE           64u
+#define RAM_START                   0x00000000u
+#define RAM_END                     0x000007FFu
+#define FLASH_START                 0x00008000u
+#define FLASH_END                   0x0000FFFFu
+#define EEPROM_START                0x00004000u
+#define EEPROM_END                  0x0000407Fu
+
 #define enable_interrupts()         __asm__("rim");
 #define disable_interrupts()        __asm__("sim");
 #define rim()                       {__asm__("rim\n");}  /* enable interrupts */
