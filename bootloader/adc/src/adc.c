@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <stm8s003.h>
+#include <platform.h>
 #include <adc.h>
 
 void adc_init(uint8_t channel)

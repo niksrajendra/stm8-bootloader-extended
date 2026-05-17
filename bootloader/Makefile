@@ -4,6 +4,9 @@ FAMILY  ?= STM8S
 
 ARCH     = stm8
 
+# Configuration: debug or release (default: release)
+CONFIG   ?= release
+
 CC		= sdcc
 AS		= sdasstm8
 OBJCOPY =	sdobjcopy
@@ -20,9 +23,21 @@ ODIR=	../bin
 ASFLAGS  = -plosgff
 CFLAGS=	-m$(ARCH) -p$(MCU) -D$(FAMILY)
 CFLAGS +=$(addprefix -I,$(INC_DIR))
+
+# Configuration-specific flags
+ifeq ($(CONFIG),debug)
+    CFLAGS += -DDEBUG --debug
+    CFLAGS += -O0
+    BUILD_SUFFIX = _debug
+else
+    # Release configuration (default)
+    CFLAGS += -O2
+    BUILD_SUFFIX =
+endif
+
 LDFLAGS  = -m$(ARCH) -l$(ARCH) --out-fmt-ihx
-BUILD_DIR = ../bin/bootloader
-EXECUTABLE = bootloader
+BUILD_DIR = ../bin/bootloader$(BUILD_SUFFIX)
+EXECUTABLE = bootloader$(BUILD_SUFFIX)
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.rel, $(SRCS))
 OBJS += $(patsubst $(SRC_DIR)/%.s, $(BUILD_DIR)/%.rel, $(SRCasm))
 ASMS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.asm, $(SRCS))
@@ -35,6 +50,7 @@ all: $(OBJS)
 #	$(CC) $(SRCS) -I$(CFLAGS) $(LIBS) --out-fmt-ihx -o$(ODIR)/
 	echo $(SRCS)
 	$(CC) $(LDFLAGS) $(LIBS) $(OBJS) -o $(BUILD_DIR)/$(EXECUTABLE).hex
+	@echo "Build complete: $(CONFIG) configuration"
 	
 $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)
@@ -49,7 +65,13 @@ $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.s
 binary:
 	$(OBJCOPY) -I ihex $(BUILD_DIR)/$(EXECUTABLE).hex -O binary $(BUILD_DIR)/$(EXECUTABLE).bin
 	
-.PHONY: clean flash
+.PHONY: clean flash debug release
+
+debug:
+	$(MAKE) CONFIG=debug all
+
+release:
+	$(MAKE) CONFIG=release all
 
 clean:
 	@echo Object files are: $(OBJS)

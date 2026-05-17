@@ -1,5 +1,5 @@
-#include <stm8s003.h>
-#include <../gpio/inc/gpio.h>
+#include <platform.h>
+#include <gpio.h>
 #include <spi.h>
 
 void SPI_init(uint32_t clock, SpiMode mode, uint16_t buadrate)

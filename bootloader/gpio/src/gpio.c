@@ -1,6 +1,6 @@
-#include <stm8s003.h>
+#include <platform.h>
 #include <stdint.h>
-#include <../inc/gpio.h>
+#include <gpio.h>
 
 void GPIOSetMode(gpioReg *port, uint8_t pinNum, GPIOmode mode)
 {

@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <stm8s003.h>
+#include <platform.h>
 #include <uart.h>
 
 void uart_init(uint32_t baud_rate, modeUART mode)

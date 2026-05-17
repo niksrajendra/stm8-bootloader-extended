@@ -1,4 +1,4 @@
-#include <stm8s003.h>
+#include <platform.h>
 #include <timer.h>
 
 void timer4_init(void)

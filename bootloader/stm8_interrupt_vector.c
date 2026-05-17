@@ -1,10 +1,12 @@
-#include <stm8s003.h>
+#include <platform.h>
 #include <stdint.h>
 #include <timer.h>
 
-void uart_isr(void) __interrupt(UART1_TXC_ISR);
+
 void adc1_isr(void) __interrupt(ADC1_ISR);
 void tim4_isr(void) __interrupt(TIM4_ISR);
+void uart_tx_isr(void) __interrupt(UART1_TXC_ISR);
+void uart_rx_isr(void) __interrupt(UART1_RXC_ISR);
 
 ///*	BASIC INTERRUPT VECTOR TABLE FOR STM8 devices
 // *	Copyright (c) 2007 STMicroelectronics
@@ -72,7 +74,12 @@ void reset_isr(void) __interrupt(0u)
 
 }
 
-void uart_isr(void) __interrupt(UART1_TXC_ISR)
+void uart_tx_isr(void) __interrupt(UART1_TXC_ISR)
+{
+
+}
+
+void uart_rx_isr(void) __interrupt(UART1_RXC_ISR)
 {
 
 }
