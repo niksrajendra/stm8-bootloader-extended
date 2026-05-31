@@ -7,8 +7,11 @@
     #define BLOCK_SIZE      128
 #endif
 
+#define RELOCATE_IVT        1
+
+
 /* application address */
-#define BOOT_ADDR           0x8800
+#define BOOT_ADDR           0x8C00
 
 /* entry jumper */
 #define BOOT_PIN            4

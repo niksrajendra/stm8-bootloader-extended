@@ -17,12 +17,16 @@ SRC_DIR = .
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 SRCasm := $(shell find $(SRC_DIR) -name '*.s')
 INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+
+# Use sort to strip out duplicates
+UNIQUE_DIRS := $(sort $(INC_DIR))
+
 LIBS=	-lstm8 -mstm8
 IDIR=	../include
 ODIR=	../bin
 ASFLAGS  = -plosgff
 CFLAGS=	-m$(ARCH) -p$(MCU) -D$(FAMILY)
-CFLAGS +=$(addprefix -I,$(INC_DIR))
+CFLAGS +=$(addprefix -I,$(UNIQUE_DIRS))
 
 # Configuration-specific flags
 ifeq ($(CONFIG),debug)
@@ -31,7 +35,7 @@ ifeq ($(CONFIG),debug)
     BUILD_SUFFIX = _debug
 else
     # Release configuration (default)
-    CFLAGS += -O2
+    #CFLAGS += -O2
     BUILD_SUFFIX =
 endif
 
@@ -39,7 +43,7 @@ LDFLAGS  = -m$(ARCH) -l$(ARCH) --out-fmt-ihx
 BUILD_DIR = ../bin/bootloader$(BUILD_SUFFIX)
 EXECUTABLE = bootloader$(BUILD_SUFFIX)
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.rel, $(SRCS))
-OBJS += $(patsubst $(SRC_DIR)/%.s, $(BUILD_DIR)/%.rel, $(SRCasm))
+#OBJS += $(patsubst $(SRC_DIR)/%.s, $(BUILD_DIR)/%.rel, $(SRCasm))
 ASMS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.asm, $(SRCS))
 LSTS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.lst, $(SRCS))
 SYMS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.sym, $(SRCS))
@@ -54,12 +58,12 @@ all: $(OBJS)
 	
 $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)
-	@echo $(INC_DIR) 
+	@echo $(UNIQUE_DIRS) 
 	$(CC) $(CFLAGS) $(LIBS) -c $^ -o $@
 
 $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.s
 	mkdir -p $(dir $@)
-	@echo $(INC_DIR)
+	@echo $(UNIQUE_DIRS) 
 	$(AS) $(ASFLAGS) -o $@ $<
 
 binary:
@@ -85,3 +89,6 @@ clean:
 	
 flash:
 	stm8flash -c stlinkv2 -p$(MCU) -w $(BUILD_DIR)/$(EXECUTABLE).hex
+
+dump_read:
+	stm8flash -c stlinkv2 -p$(MCU) -r $(BUILD_DIR)/dump_read.hex

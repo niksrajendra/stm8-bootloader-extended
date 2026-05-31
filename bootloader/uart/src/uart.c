@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <platform.h>
 #include <uart.h>
+#include <timer.h>
 
 void uart_init(uint32_t baud_rate, modeUART mode)
 {
@@ -45,6 +46,7 @@ void uart_write(uint8_t data, uint8_t channel)
 
 uint8_t uart_read(uint8_t channel)
 {
+    iwdg_refresh();
     while (!(UART1_SR & (1 << 5)));
     return UART1_DR;
 }

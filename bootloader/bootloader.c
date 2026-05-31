@@ -1,20 +1,18 @@
-#include <stm8s003.h>
+#include <platform.h>
 #include <gpio.h>
 #include <spi.h>
 #include <ram.h>
 #include <uart.h>
 #include <timer.h>
-#include "bootloader.h"
-#include "stm8_interrupt_vector.h"
-
-
-
+#include <bootloader.h>
+#include <stm8_interrupt_vector.h>
 
 static uint8_t CRC;
 static uint8_t ivt[128];
 static uint8_t f_ram[128];
 static uint8_t rx_buffer[BLOCK_SIZE];
 static volatile uint8_t RAM_SEG_LEN;
+uint8_t app_valid = 0; // 0: invalid, 1: bootloader, 2: application
 
 static void serial_send_ack(void);
 static void serial_read_block(uint8_t *dest);
@@ -117,6 +115,9 @@ inline void bootloader_exec(void) {
         break;
     }
 
+    /* reset CRC before reading incoming blocks */
+    CRC = 0;
+
 #if !RELOCATE_IVT
     /* get application interrupt table */
     serial_read_block(ivt);
@@ -174,18 +175,28 @@ inline void ram_cpy() {
 }
 
 void main() {
+    uint16_t app_start;
 	hse_enable();
+    enable_interrupts();
+    OPT1 = 0x30;  
+    //disable_interrupts();
+    GPIOSetMode(GPIOD, BOOT_PIN, INPUT_PULLUP_WITHOUTINTERRUPT);
     BOOT_PIN_CR1 = 1 << BOOT_PIN;
     if (!(BOOT_PIN_IDR & (1 << BOOT_PIN))) {
         /* execute bootloader */
         //CLK_CKDIVR = 0;
         ram_cpy();
-        iwdg_init();
+        //iwdg_init();
         uart_init(115200, DATA_8_BIT_STOP_1_BIT);
+        app_valid = 1;
         bootloader_exec();
     } else {
         /* jump to application */
         BOOT_PIN_CR1 = 0x00;
-        BOOT();
+        app_valid = 2;
+        disable_interrupts();
+        app_start = *(uint16_t *) (BOOT_ADDR+2);
+        ((void (*)(void)) app_start)();
+        //BOOT();
     }
 }

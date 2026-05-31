@@ -17,12 +17,16 @@ SRC_DIR = .
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 SRCasm := $(shell find $(SRC_DIR) -name '*.s')
 INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+
+# Use sort to strip out duplicates
+UNIQUE_DIRS := $(sort $(INC_DIR))
+
 LIBS=	-lstm8 -mstm8
 IDIR=	../include
 ODIR=	../bin
 ASFLAGS  = -plosgff
 CFLAGS=	-m$(ARCH) -p$(MCU) -D$(FAMILY)
-CFLAGS +=$(addprefix -I,$(INC_DIR))
+CFLAGS +=$(addprefix -I,$(UNIQUE_DIRS))
 
 # Configuration-specific flags
 ifeq ($(CONFIG),debug)
@@ -54,12 +58,12 @@ all: $(OBJS)
 	
 $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)
-	@echo $(INC_DIR) 
+	@echo $(UNIQUE_DIRS)
 	$(CC) $(CFLAGS) $(LIBS) -c $^ -o $@
 
 $(BUILD_DIR)/%.rel: $(SRC_DIR)/%.s
 	mkdir -p $(dir $@)
-	@echo $(INC_DIR)
+	@echo $(UNIQUE_DIRS)
 	$(AS) $(ASFLAGS) -o $@ $<
 
 binary:

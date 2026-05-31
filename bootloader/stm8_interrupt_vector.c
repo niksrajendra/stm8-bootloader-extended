@@ -1,12 +1,15 @@
 #include <platform.h>
 #include <stdint.h>
+#include <stm8_interrupt_vector.h>
+#include <bootloader.h>
 #include <timer.h>
 
 
-void adc1_isr(void) __interrupt(ADC1_ISR);
-void tim4_isr(void) __interrupt(TIM4_ISR);
-void uart_tx_isr(void) __interrupt(UART1_TXC_ISR);
-void uart_rx_isr(void) __interrupt(UART1_RXC_ISR);
+//void adc1_isr(void) __interrupt(ADC1_ISR);
+//void tim4_isr(void) __interrupt(TIM4_ISR);
+//void uart_tx_isr(void) __interrupt(UART1_TXC_ISR);
+//void uart_rx_isr(void) __interrupt(UART1_RXC_ISR);
+//void dummy_irq29(void) __interrupt(29);
 
 ///*	BASIC INTERRUPT VECTOR TABLE FOR STM8 devices
 // *	Copyright (c) 2007 STMicroelectronics
@@ -71,32 +74,84 @@ void handler(void) __trap
 
 void reset_isr(void) __interrupt(0u)
 {
-
+    // Calculate the address and cast it to the function pointer
+    if(app_valid == 2) {
+        FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * 0u));
+        jump_to_target();
+    } else {
+        // Handle the case where app_valid is not 2 (e.g., log an error, reset the system, etc.)
+        // For now, we can just return or enter an infinite loop
+        return;
+    }
 }
 
 void uart_tx_isr(void) __interrupt(UART1_TXC_ISR)
 {
+    // Calculate the address and cast it to the function pointer
+    FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * UART1_TXC_ISR));
 
+    // Call the function (compiles to an assembly jump/call)
+    if(app_valid == 2) {
+        jump_to_target();
+    } else {
+        // Handle the case where app_valid is not 2 (e.g., log an error, reset the system, etc.)
+        // For now, we can just return or enter an infinite loop
+        return;
+    }
 }
 
 void uart_rx_isr(void) __interrupt(UART1_RXC_ISR)
 {
+    // Calculate the address and cast it to the function pointer
+    FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * UART1_RXC_ISR));
 
+    // Call the function (compiles to an assembly jump/call)
+    if(app_valid == 2) {
+        jump_to_target();
+    } else {
+        // Handle the case where app_valid is not 2 (e.g., log an error, reset the system, etc.)
+        // For now, we can just return or enter an infinite loop
+        return;
+    }                    
 }
 
 void adc1_isr(void) __interrupt(ADC1_ISR)
 {
-
+    if(app_valid == 2) {
+        FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * ADC1_ISR));
+        jump_to_target();
+    } else {
+        return;
+    }
 }
 
 void tim4_isr(void) __interrupt(TIM4_ISR) {
-    //__asm__("jp 0x8464");
-    //disable_interrupts();
-    //TIM4_IER = 0x00u;
-    TIM4_SR &= 0xFEu;
-    //PC_ODR |=1<<3;
-    PC_ODR ^= 1<<3;
-    //globalCounter++;
-    //TIM4_IER = 0x01u;
-    //enable_interrupts();
+    if(app_valid == 2) {
+        FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * TIM4_ISR));
+        jump_to_target();
+    } else {
+        //__asm__("jp 0x8464");
+        //disable_interrupts();
+        //TIM4_IER = 0x00u;
+        TIM4_SR &= 0xFEu;
+        //PC_ODR |=1<<3;
+        PC_ODR ^= 1<<3;
+        //globalCounter++;
+        //TIM4_IER = 0x01u;
+        //enable_interrupts();
+        return;
+    }
+    
+}
+
+// Empty dummy ISR assigned to the final vector slot (IRQ 29)
+void dummy_irq29(void) __interrupt(29) {
+    if(app_valid == 2) {
+        FuncPtr jump_to_target = (FuncPtr)(BOOT_ADDR + (4 * 29u));
+        jump_to_target();
+    } else {
+        __asm__("trap"); // Software trap or 'iret'
+        return;
+    }
+    
 }
