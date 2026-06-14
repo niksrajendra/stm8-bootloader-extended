@@ -174,6 +174,12 @@ inline void ram_cpy() {
         f_ram[i] = ((uint8_t *) ram_flash_write_block)[i];
 }
 
+void delay(uint16_t value) {
+    for(uint16_t i = 0; i < value; i++) {
+        for(uint16_t j = 0; j < 1000; j++);
+    }
+}
+
 void main() {
     uint16_t app_start;
 	hse_enable();
@@ -181,20 +187,28 @@ void main() {
     OPT1 = 0x30;  
     //disable_interrupts();
     GPIOSetMode(GPIOD, BOOT_PIN, INPUT_PULLUP_WITHOUTINTERRUPT);
+    GPIOSetMode(GPIOC, 3, OUTPUT_PUSHPULL);
+    //uart_init(115200, DATA_8_BIT_STOP_1_BIT, 1);
     BOOT_PIN_CR1 = 1 << BOOT_PIN;
     if (!(BOOT_PIN_IDR & (1 << BOOT_PIN))) {
         /* execute bootloader */
         //CLK_CKDIVR = 0;
         ram_cpy();
         //iwdg_init();
-        uart_init(115200, DATA_8_BIT_STOP_1_BIT);
+        uart_init(115200, DATA_8_BIT_STOP_1_BIT, 1);
         app_valid = 1;
+        GPIOSetValue(GPIOC, 3, 0);
         bootloader_exec();
     } else {
         /* jump to application */
         BOOT_PIN_CR1 = 0x00;
         app_valid = 2;
+        GPIOSetValue(GPIOC, 3, 1);
+        //PC_ODR |= (1u << 3);
         disable_interrupts();
+        //delay(1000);
+        uart_init(115200, DATA_8_BIT_STOP_1_BIT, 1);
+        //uart_write('jumping to application',1);
         app_start = *(uint16_t *) (BOOT_ADDR+2);
         ((void (*)(void)) app_start)();
         //BOOT();

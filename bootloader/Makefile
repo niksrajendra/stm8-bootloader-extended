@@ -27,6 +27,7 @@ ODIR=	../bin
 ASFLAGS  = -plosgff
 CFLAGS=	-m$(ARCH) -p$(MCU) -D$(FAMILY)
 CFLAGS +=$(addprefix -I,$(UNIQUE_DIRS))
+CFLAGS += --std-c11
 
 # Configuration-specific flags
 ifeq ($(CONFIG),debug)

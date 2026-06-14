@@ -48,7 +48,7 @@ GPIOstate GPIOGetValue(gpioReg *port, uint8_t pinNum)
 {
     GPIOstate result = INPUT_FLOATING_WITHOUTINTERRUPT;
     /* if pinmode is output */
-    if((port->DDR & (1u << pinNum)) == 0x00u)
+    if((port->DDR & (1u << pinNum)) == (1u << pinNum))
     {
         result = ((port->ODR)&(1u << pinNum)) >> pinNum;
     }
@@ -62,7 +62,7 @@ GPIOstate GPIOGetValue(gpioReg *port, uint8_t pinNum)
 
 void GPIOSetValue(gpioReg *port, uint8_t pinNum, GPIOstate state)
 {
-    if((port->DDR & (1u << pinNum)) == 0x00u)
+    if((port->DDR & (1u << pinNum)) == (1u << pinNum))
     {
         if(state == LOW)
         {
