@@ -18,7 +18,7 @@ void i2c_init(uint32_t clock_speed, I2Cmode mode)
     else if (mode == I2C_FAST_MODE)
     {
         I2C_CCRH |= I2C_FAST_MODE_ENABLE; // Set the I2C mode to fast
-        if(i2C_CCRH & I2C_FAST_MODE_DUTY_CYCLE_16_9)
+        if(I2C_CCRH & I2C_FAST_MODE_DUTY_CYCLE_16_9)
         {
             ccr_value = ((f_cpu * 9) / (clock_speed * 25)); // Calculate CCR value for fast mode with duty cycle 16/9
         }

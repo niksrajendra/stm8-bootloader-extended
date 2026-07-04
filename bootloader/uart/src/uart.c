@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <platform.h>
 #include <uart.h>
+#include <uartCfg.h>
 #include <timer.h>
 
 void uart_init(uint32_t baud_rate, modeUART mode, uint8_t channel)
@@ -11,7 +12,9 @@ void uart_init(uint32_t baud_rate, modeUART mode, uint8_t channel)
     {
         /* enable UART1 clock */
         CLK_PCKENR1 |= 0x80u;
+        #if defined(STM8S_003_H) || defined(STM8S_007_H)
         pUART = UART1;
+        #endif
     }
     if(channel == 2)
     {
@@ -55,6 +58,7 @@ void uart_init(uint32_t baud_rate, modeUART mode, uint8_t channel)
 
 void uart_write(uint8_t data, uint8_t channel)
 {
+    #if defined(STM8S_003_H) || defined(STM8S_007_H)
     UART_TypeDef1 *pUART = UART1;
     if(channel == 1)
     {
@@ -62,12 +66,15 @@ void uart_write(uint8_t data, uint8_t channel)
     }
 	pUART->DR = data;
 	while (!(pUART->SR & (1 << 6)));
+    #endif
 }
 
 uint8_t uart_read(uint8_t channel)
 {
+    #if defined(STM8S_003_H) || defined(STM8S_007_H)
     UART_TypeDef1 *pUART = UART1;
     iwdg_refresh();
     while (!(pUART->SR & (1 << 5)));
     return pUART->DR;
+    #endif
 }

@@ -1,5 +1,6 @@
 ## STM8S
-MCU     ?= stm8s003f3
+#MCU     ?= stm8s003f3
+MCU     ?= stm8s005k6
 FAMILY  ?= STM8S
 
 ARCH     = stm8
@@ -28,6 +29,17 @@ ASFLAGS  = -plosgff
 CFLAGS=	-m$(ARCH) -p$(MCU) -D$(FAMILY)
 CFLAGS +=$(addprefix -I,$(UNIQUE_DIRS))
 CFLAGS += --std-c11
+
+# --- ADD THIS LOGIC TO DEFINE THE TARGET MCU MACRO ---
+ifeq ($(MCU),stm8s003f3)
+    CFLAGS += -DCHIP_STM8S003F3
+endif
+ifeq ($(MCU),stm8s005k6)
+    CFLAGS += -DCHIP_STM8S005K6
+endif
+ifeq ($(MCU),stm8s007c8)
+    CFLAGS += -DCHIP_STM8S007C8
+endif
 
 # Configuration-specific flags
 ifeq ($(CONFIG),debug)
@@ -73,6 +85,8 @@ binary:
 .PHONY: clean flash debug release
 
 debug:
+ifeq ($(MCU),stm8s003f3)
+    C
 	$(MAKE) CONFIG=debug all
 
 release:

@@ -85,6 +85,7 @@ void reset_isr(void) __interrupt(0u)
     }
 }
 
+#if defined(STM8S_003_H)
 void uart_tx_isr(void) __interrupt(UART1_TXC_ISR)
 {
     // Calculate the address and cast it to the function pointer
@@ -114,6 +115,8 @@ void uart_rx_isr(void) __interrupt(UART1_RXC_ISR)
         return;
     }                    
 }
+
+#endif
 
 void adc1_isr(void) __interrupt(ADC1_ISR)
 {
