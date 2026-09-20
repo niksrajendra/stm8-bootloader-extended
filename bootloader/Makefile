@@ -85,8 +85,6 @@ binary:
 .PHONY: clean flash debug release
 
 debug:
-ifeq ($(MCU),stm8s003f3)
-    C
 	$(MAKE) CONFIG=debug all
 
 release:
