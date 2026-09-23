@@ -1,5 +1,6 @@
 ## STM8S
-MCU     ?= stm8s003f3
+#MCU     ?= stm8s003f3
+MCU		?= stm8s005k6
 FAMILY  ?= STM8S
 
 ARCH     = stm8

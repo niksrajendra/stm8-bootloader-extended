@@ -5,8 +5,17 @@
 
 void adc1_isr(void) __interrupt(ADC1_ISR);
 void tim4_isr(void) __interrupt(TIM4_ISR);
-void uart_tx_isr(void) __interrupt(UART1_TXC_ISR);
-void uart_rx_isr(void) __interrupt(UART1_RXC_ISR);
+#if defined(STM8S_003_H) || defined(STM8S_007_H)
+void uart1_tx_isr(void) __interrupt(UART1_TXC_ISR);
+void uart1_rx_isr(void) __interrupt(UART1_RXC_ISR);
+#if defined(STM8S_007_H)
+void uart3_tx_isr(void) __interrupt(UART3_TXC_ISR);
+void uart3_rx_isr(void) __interrupt(UART3_RXC_ISR);
+#endif
+#elif defined(STM8S_005_H)
+void uart2_tx_isr(void) __interrupt(UART2_TXC_ISR);
+void uart2_rx_isr(void) __interrupt(UART2_RXC_ISR);
+#endif
 void dummy_irq29(void) __interrupt(29);
 
 ///*	BASIC INTERRUPT VECTOR TABLE FOR STM8 devices
@@ -74,21 +83,52 @@ void reset_isr(void) __interrupt(0u)
 {
 
 }
-
-void uart_tx_isr(void) __interrupt(UART1_TXC_ISR)
+#if defined(STM8S_003_H) || defined(STM8S_007_H)
+void uart1_tx_isr(void) __interrupt(UART1_TXC_ISR)
 {
 
 }
 
-void uart_rx_isr(void) __interrupt(UART1_RXC_ISR)
+void uart1_rx_isr(void) __interrupt(UART1_RXC_ISR)
+{
+
+}
+#endif
+#if defined(STM8S_007_H)
+void uart3_tx_isr(void) __interrupt(UART3_TXC_ISR)
+{
+
+}
+void uart3_rx_isr(void) __interrupt(UART3_RXC_ISR)
+{
+
+}
+#endif
+#if defined(STM8S_005_H)
+void uart2_tx_isr(void) __interrupt(UART2_TXC_ISR)
 {
 
 }
 
+void uart2_rx_isr(void) __interrupt(UART2_RXC_ISR)
+{
+
+}
+#endif
+
+#if defined(STM8S_003_H) || defined(STM8S_007_H)
 void adc1_isr(void) __interrupt(ADC1_ISR)
 {
 
 }
+#endif
+
+#if defined(STM8S_005_H)
+void adc1_isr(void) __interrupt(ADC1_ISR)
+{
+
+}
+#endif
 
 void tim4_isr(void) __interrupt(TIM4_ISR) {
     //__asm__("jp 0x8464");
