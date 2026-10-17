@@ -25,6 +25,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(stm8_bootloader_utility
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        uartsettingsdialog.h uartsettingsdialog.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET stm8_bootloader_utility APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -47,6 +48,15 @@ else()
 
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
+
+# 1. Add SerialPort to your find_package line
+find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort)
+
+# 2. Add it to your target linking logic block
+target_link_libraries(stm8_bootloader_utility PRIVATE
+    Qt6::Widgets
+    Qt6::SerialPort # <-- Make sure this line exists
+)
 
 target_link_libraries(stm8_bootloader_utility PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
