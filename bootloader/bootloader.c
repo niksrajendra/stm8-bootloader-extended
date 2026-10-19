@@ -7,6 +7,12 @@
 #include <bootloader.h>
 #include <stm8_interrupt_vector.h>
 
+#if defined(STM8S_005_H)
+#define BOOTLOADER_UART_CHANNEL 2u
+#else
+#define BOOTLOADER_UART_CHANNEL 1u
+#endif
+
 static uint8_t CRC;
 static uint8_t ivt[128];
 static uint8_t f_ram[128];
@@ -34,16 +40,16 @@ inline void get_ram_section_length() {
  * Send ACK response
  */
 static void serial_send_ack() {
-    uart_write(0xAA,1);
-    uart_write(0xBB,1);
+    uart_write(0xAA, BOOTLOADER_UART_CHANNEL);
+    uart_write(0xBB, BOOTLOADER_UART_CHANNEL);
 }
 
 /**
  * Send NACK response (CRC mismatch)
  */
 inline void serial_send_nack() {
-    uart_write(0xDE,1);
-    uart_write(0xAD,1);
+    uart_write(0xDE, BOOTLOADER_UART_CHANNEL);
+    uart_write(0xAD, BOOTLOADER_UART_CHANNEL);
 }
 
 /**
@@ -67,12 +73,13 @@ inline uint8_t crc8_update(uint8_t data, uint8_t crc) {
  * @param dest destination buffer
  */
 static void serial_read_block(uint8_t *dest) {
-    serial_send_ack();
+    
     for (uint8_t i = 0; i < BLOCK_SIZE; i++) {
-        uint8_t rx = uart_read(1);
+        uint8_t rx = uart_read(BOOTLOADER_UART_CHANNEL);
         dest[i] = rx;
         CRC = crc8_update(rx, CRC);
     }
+    serial_send_ack();
 }
 
 void hse_enable(void) {
@@ -95,23 +102,23 @@ inline void bootloader_exec(void) {
 
     /* enter bootloader */
     for (;;) {
-        uint8_t rx = uart_read(1);
+        uint8_t rx = uart_read(BOOTLOADER_UART_CHANNEL);
         if (rx != 0xDE) continue;
-        rx = uart_read(1);
+        rx = uart_read(BOOTLOADER_UART_CHANNEL);
         if (rx != 0xAD) continue;
-        rx = uart_read(1);
+        rx = uart_read(BOOTLOADER_UART_CHANNEL);
         if (rx != 0xBE) continue;
-        rx = uart_read(1);
+        rx = uart_read(BOOTLOADER_UART_CHANNEL);
         if (rx != 0xEF) continue;
-        chunks = uart_read(1);
-        crc_rx = uart_read(1);
-        rx = uart_read(1);
+        chunks = uart_read(BOOTLOADER_UART_CHANNEL);
+        crc_rx = uart_read(BOOTLOADER_UART_CHANNEL);
+        rx = uart_read(BOOTLOADER_UART_CHANNEL);
         if (crc_rx != rx)
             continue;
-		uart_write('b',1);
-		uart_write('o',1);
-		uart_write('o',1);
-		uart_write('t',1);
+        uart_write('b', BOOTLOADER_UART_CHANNEL);
+        uart_write('o', BOOTLOADER_UART_CHANNEL);
+        uart_write('o', BOOTLOADER_UART_CHANNEL);
+        uart_write('t', BOOTLOADER_UART_CHANNEL);
         break;
     }
 
@@ -195,9 +202,9 @@ void main() {
         //CLK_CKDIVR = 0;
         ram_cpy();
         //iwdg_init();
-        uart_init(115200, DATA_8_BIT_STOP_1_BIT, 1);
+        uart_init(115200, DATA_8_BIT_STOP_1_BIT, BOOTLOADER_UART_CHANNEL);
         app_valid = 1;
-        GPIOSetValue(GPIOC, 3, 0);
+        GPIOSetValue(GPIOC, 3, 1);
         bootloader_exec();
     } else {
         /* jump to application */
@@ -207,7 +214,7 @@ void main() {
         //PC_ODR |= (1u << 3);
         disable_interrupts();
         //delay(1000);
-        uart_init(115200, DATA_8_BIT_STOP_1_BIT, 1);
+        uart_init(115200, DATA_8_BIT_STOP_1_BIT, BOOTLOADER_UART_CHANNEL);
         //uart_write('jumping to application',1);
         app_start = *(uint16_t *) (BOOT_ADDR+2);
         ((void (*)(void)) app_start)();

@@ -116,15 +116,15 @@ void uart2_rx_isr(void) __interrupt(UART2_RXC_ISR)
 }
 #endif
 
-#if defined(STM8S_003_H) || defined(STM8S_007_H)
+#if defined(STM8S_003_H) || defined(STM8S_005_H)
 void adc1_isr(void) __interrupt(ADC1_ISR)
 {
 
 }
 #endif
 
-#if defined(STM8S_005_H)
-void adc1_isr(void) __interrupt(ADC1_ISR)
+#if defined(STM8S_007_H)
+void adc2_isr(void) __interrupt(ADC2_ISR)
 {
 
 }

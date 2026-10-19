@@ -4,34 +4,46 @@
 #include <uartCfg.h>
 #include <timer.h>
 
+static UART_TypeDef1 *uart_get(uint8_t channel)
+{
+#if defined(STM8S_003_H)
+    if (channel == 1u)
+        return UART1;
+#elif defined(STM8S_005_H)
+    if (channel == 2u)
+        return (UART_TypeDef1 *)UART2;
+#elif defined(STM8S_007_H)
+    if (channel == 1u)
+        return UART1;
+    if (channel == 3u)
+        return (UART_TypeDef1 *)UART3;
+#endif
+    return 0;
+}
+
 void uart_init(uint32_t baud_rate, modeUART mode, uint8_t channel)
 {
-	uint32_t f_cpu = 16000000,uart_div;
-    UART_TypeDef1 *pUART;
-    if(channel == 1)
-    {
-        /* enable UART1 clock */
-        CLK_PCKENR1 |= 0x80u;
-        #if defined(STM8S_003_H) || defined(STM8S_007_H)
-        pUART = UART1;
-        #endif
-    }
-    if(channel == 2)
-    {
-        /* enable UART2 clock */
-        CLK_PCKENR1 |= 0x40u;
-        //pUART = UART2;
-    }
+    uint32_t f_cpu = 16000000u;
+    uint32_t uart_div;
+    UART_TypeDef1 *pUART = uart_get(channel);
+
+    if (pUART == 0 || baud_rate == 0u)
+        return;
+
+#if defined(STM8S_003_H)
+    CLK_PCKENR1 |= 0x08u;
+#elif defined(STM8S_005_H)
+    CLK_PCKENR1 |= 0x08u;
+#elif defined(STM8S_007_H)
+    CLK_PCKENR1 |= (channel == 1u) ? 0x04u : 0x08u;
+#endif
 	
-	/* check divisor of baud rate for least error */
-	uart_div = (f_cpu + (baud_rate/2) + 1u)/baud_rate;
-	//UART1_BRR2 = 0x00;
-	//UART1_BRR2 = ((uart_div & 0xF000u)>>8 | (uart_div & 0x000Fu));
-    pUART->BRR2 = ((uart_div & 0xF000u)>>8 | (uart_div & 0x000Fu));
-	//UART1_BRR1 = 0x0D;
-	//UART1_BRR1 = (uart_div & 0x0FF0u)>>4;
-    pUART->BRR1 = (uart_div & 0x0FF0u)>>4;
-	//UART1_CR2  = 0x0Cu;
+	/* BRR encodes f_cpu / baud_rate as a 12-bit mantissa with 4 fractional bits. */
+	uart_div = (f_cpu + (baud_rate / 2u)) / baud_rate;
+    uint8_t brr1_val = (uint8_t)((uart_div >> 4) & 0x00FFu);
+    uint8_t brr2_val = (uint8_t)((uart_div & 0x000Fu) | ((uart_div >> 8) & 0x00F0u));
+    pUART->BRR2 = brr2_val;
+    pUART->BRR1 = brr1_val;
     pUART->CR2  = 0x0Cu;
 	/* set number of stop bit */
 	switch(mode)
@@ -52,29 +64,25 @@ void uart_init(uint32_t baud_rate, modeUART mode, uint8_t channel)
         default: pUART->CR3 &= 0xCFu;
             break;
 	}
-
-	//UART1_CR3 = 0x00
 }
 
 void uart_write(uint8_t data, uint8_t channel)
 {
-    #if defined(STM8S_003_H) || defined(STM8S_007_H)
-    UART_TypeDef1 *pUART = UART1;
-    if(channel == 1)
-    {
-        
-    }
+    UART_TypeDef1 *pUART = uart_get(channel);
+    if (pUART == 0)
+        return;
+
 	pUART->DR = data;
-	while (!(pUART->SR & (1 << 6)));
-    #endif
+	while (!(pUART->SR & (1u << 6)));
 }
 
 uint8_t uart_read(uint8_t channel)
 {
-    #if defined(STM8S_003_H) || defined(STM8S_007_H)
-    UART_TypeDef1 *pUART = UART1;
+    UART_TypeDef1 *pUART = uart_get(channel);
+    if (pUART == 0)
+        return 0;
+
     iwdg_refresh();
-    while (!(pUART->SR & (1 << 5)));
+    while (!(pUART->SR & (1u << 5)));
     return pUART->DR;
-    #endif
 }

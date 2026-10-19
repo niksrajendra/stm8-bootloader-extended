@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QPlainTextEdit>
 #include <QSerialPort>      // For holding the port connection state
 #include "uartsettingsdialog.h" // For recognizing UartSettings struct
 
@@ -19,6 +20,7 @@ public:
     void executeBootloader();
 
 private:
+    QPlainTextEdit *m_logWindow;
     QLabel *m_statusLabel;
     QString m_firmwarePath;     // Remembers the chosen file path
     UartSettings m_uartConfig;  // Remembers the configured baud/parity settings

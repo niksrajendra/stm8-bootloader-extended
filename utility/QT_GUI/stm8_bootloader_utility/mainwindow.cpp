@@ -20,15 +20,19 @@ MainWindow::MainWindow(QWidget *parent)
     QMenuBar *menu = this->menuBar();
     QMenu *fileMenu = new QMenu("&File", this);
     QMenu *settingMenu = new QMenu("&Setting", this);
+    QMenu *aboutMenu = new QMenu("&About", this);
 
     QAction *quitAction = new QAction("&Quit", this);
     QAction *uartSetting = new QAction("&UART setting", this);
+    QAction *aboutAction = new QAction("&About", this);
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
     fileMenu->addAction(quitAction);
     settingMenu->addAction(uartSetting);
+    aboutMenu->addAction(aboutAction);
 
     menu->addMenu(fileMenu);
     menu->addMenu(settingMenu);
+    menu->addMenu(aboutMenu);
 
     // 2. Create the central container widget
     QWidget *centralWidget = new QWidget(this);
@@ -44,6 +48,26 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(button1);
     layout->addWidget(button2);
     layout->addWidget(button3);
+
+    // NEW: Initialize and style the diagnostic Log Window
+    m_logWindow = new QPlainTextEdit(centralWidget);
+    m_logWindow->setReadOnly(true); // Prevents the user from typing inside it
+
+    // Style it to look like a terminal window
+    m_logWindow->setStyleSheet(
+        "QPlainTextEdit {"
+        "   background-color: #1e1e1e;" // Dark charcoal background
+        "   color: #00ff00;"            // Classic terminal green text
+        "   font-family: 'Courier New', monospace;"
+        "   font-size: 11pt;"
+        "}"
+        );
+
+    // Add a placeholder indicator text
+    m_logWindow->appendPlainText("[SYSTEM LOG INITIALIZED]");
+
+    // Add the log window directly to the main vertical layout stretch
+    layout->addWidget(m_logWindow);
 
     // 4. Handle the file chooser click event using a Lambda function
     connect(fileButton, &QPushButton::clicked, this, [this]() {
@@ -138,39 +162,55 @@ void MainWindow::executeBootloader() {
 
     QFile file(m_firmwarePath);
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "Failed to open firmware file.";
+        m_logWindow->appendPlainText("ERROR: Failed to open firmware file.");
         return;
     }
 
-    // Initialize Port connection configuration
-    m_serialPort = new QSerialPort(this);
+    // ==========================================
+    // FIXED: Move port allocation to the TOP
+    // ==========================================
+    if (!m_serialPort) {
+        m_serialPort = new QSerialPort(this);
+    }
+
     m_serialPort->setPortName(m_uartConfig.portName);
     m_serialPort->setBaudRate(m_uartConfig.baudRate);
     m_serialPort->setDataBits(m_uartConfig.dataBits);
     m_serialPort->setStopBits(m_uartConfig.stopBits);
     m_serialPort->setParity(m_uartConfig.parity);
 
-    if (!m_serialPort->open(QIODevice::ReadWrite)) {
-        qDebug() << "Failed to open port:" << m_serialPort->errorString();
+    if (!m_serialPort->isOpen() && !m_serialPort->open(QIODevice::ReadWrite)) {
+        m_logWindow->appendPlainText("ERROR: Failed to open port: " + m_serialPort->errorString());
+        file.close();
         return;
     }
 
+    m_logWindow->appendPlainText("\n--- Starting Flashing Sequence ---");
     this->statusBar()->showMessage("Resetting STM8 target hardware...");
 
-    // Replicate exactly the Python script DTR sequence logic
+    // Now this call is completely safe from crashing!
     m_serialPort->setDataTerminalReady(true);
     QThread::msleep(100);
     m_serialPort->setDataTerminalReady(false);
-    QThread::msleep(1000); // Wait for the microbootloader core to initialize
 
-    // Calculate firmware file size and block arrays metadata requirements
+    // Give the STM8 ample time to finish resetting and outputting hardware noise
+    QThread::msleep(300);
+
+    // Read and completely discard the initial hardware startup bytes (0x00 0x80... noise)
+    if (m_serialPort->bytesAvailable() > 0) {
+        QByteArray startupNoise = m_serialPort->readAll();
+        m_logWindow->appendPlainText(QString("Discarded startup hardware noise: %1")
+                                         .arg(QString(startupNoise.toHex(' ').toUpper())));
+    }
+
+    // Clear internal software line registers to guarantee a completely clean slate
+    m_serialPort->clear(QSerialPort::Input);
+
     qint64 fileSize = file.size();
     int totalChunks = static_cast<int>(qCeil(static_cast<double>(fileSize) / BLOCK_SIZE));
     quint8 fileCrc = calculateFileCrc(m_firmwarePath, BLOCK_SIZE);
 
-    qDebug() << "Total file size:" << fileSize << "bytes | Transmitting:" << totalChunks << "chunks.";
-
-    // Build the entrance request payload package (REQ_ENTER matching Python structural payload)
+    // Build the 7-byte request preamble package (REQ_ENTER)
     QByteArray request;
     request.append(static_cast<char>(0xDE));
     request.append(static_cast<char>(0xAD));
@@ -178,70 +218,101 @@ void MainWindow::executeBootloader() {
     request.append(static_cast<char>(0xEF));
     request.append(static_cast<char>(totalChunks));
     request.append(static_cast<char>(fileCrc));
-    request.append(static_cast<char>(fileCrc)); // Duplicated CRC matches your python payload append script execution array line exactly
+    request.append(static_cast<char>(fileCrc));
+
+    // Log raw bytes sent for Preamble
+    m_logWindow->appendPlainText(QString("TX -> Raw Bytes: %1").arg(QString(request.toHex(' ').toUpper())));
 
     m_serialPort->write(request);
     m_serialPort->flush();
 
-    // Clear raw local computer input buffers before reading target device responses
-    m_serialPort->clear(QSerialPort::Input);
+    // Read the Handshake Response safely using a strict buffer accumulation loop
+    QByteArray rxBuff;
+    int expectedHandshakeBytes = 4;
+    int timeoutMs = 2000;
+    int elapsedMs = 0;
 
-    // Read the bootloader validation confirmation signature response (expecting 4 bytes)
-    if (m_serialPort->waitForReadyRead(2000)) {
-        QByteArray rxBuff = m_serialPort->read(4);
-        qDebug() << "Bootloader Handshake Init Response:" << rxBuff.toHex();
-    } else {
-        qDebug() << "Timeout waiting for initial bootloader response.";
-        m_serialPort->close();
-        file.close();
-        return;
+    while (rxBuff.size() < expectedHandshakeBytes && elapsedMs < timeoutMs) {
+        if (m_serialPort->waitForReadyRead(100)) {
+            rxBuff.append(m_serialPort->readAll());
+        } else {
+            elapsedMs += 100;
+        }
     }
 
+    // Log what was actually caught after cleaning the noise out
+    // if (rxBuff.size() >= expectedHandshakeBytes) {
+    //     m_logWindow->appendPlainText(QString("RX <- Clean Preamble Response: %1 (%2)")
+    //                                      .arg(QString(rxBuff.toHex(' ').toUpper()))
+    //                                      .arg(QString(rxBuff)));
+    // } else {
+    //     m_logWindow->appendPlainText("RX <- ERROR: Handshake Timeout or incomplete packet received!");
+    //     m_serialPort->close();
+    //     file.close();
+    //     return;
+    // }
+
+    // Clear input buffer before starting block loop to prevent tracking errors
+    m_serialPort->clear(QSerialPort::Input);
     int currentChunk = 0;
-    this->statusBar()->showMessage("Flashing firmware payload...");
+    this->statusBar()->showMessage("Streaming firmware blocks...");
 
-    // Step through each block chunk and write out data stream down the connection wire loops
+    // Stream all payload chunks back-to-back blindly
     while (!file.atEnd()) {
-        // Step A: The target microcontroller sends 2 sync validation bytes BEFORE accepting each packet chunk loop block data stream
-        if (!m_serialPort->waitForReadyRead(2000)) {
-            qDebug() << "Timeout waiting for chip ready response at chunk:" << currentChunk;
-            break;
-        }
-
-        QByteArray readySignal = m_serialPort->read(2);
-        // Print out the sync bytes from the STM8 device to verify active hardware tracking state
-        qDebug() << "Chunk" << currentChunk << "Sync Code received:" << readySignal.toHex();
-
-        // Step B: Read file slice array chunk and fill trailing gaps with padding bytes matching Python logic patterns
         QByteArray chunk = file.read(BLOCK_SIZE);
         if (chunk.size() < BLOCK_SIZE) {
             chunk.append(QByteArray(BLOCK_SIZE - chunk.size(), (char)0xFF));
         }
 
-        // Step C: Push block into the serial pipeline link instance
         m_serialPort->write(chunk);
         m_serialPort->flush();
+
+        // 1. Verify "boot" text signature response from target
+            if (m_serialPort->waitForReadyRead(2000)) {
+            QByteArray rxBuff = m_serialPort->readAll();
+            m_logWindow->appendPlainText(QString("RX <- Target Handshake: %1 (%2)")
+                                             .arg(QString(rxBuff.toHex(' ').toUpper()))
+                                             .arg(QString(rxBuff)));
+        } else {
+            m_logWindow->appendPlainText("RX <- ERROR: Handshake Timeout! Connection rejected.");
+            m_serialPort->close();
+            return;
+        }
+
+        // Log the exact raw payload block bytes sent down the wire
+        m_logWindow->appendPlainText(QString("TX -> Block %1/%2 Raw Bytes:\n%3")
+                                         .arg(currentChunk + 1)
+                                         .arg(totalChunks)
+                                         .arg(QString(chunk.toHex(' ').toUpper())));
+
+        QApplication::processEvents(); // Forces UI thread log display refresh instantly
+        QThread::msleep(100); // Clear target RAM write cycles
         currentChunk++;
     }
 
-    // Step D: Evaluate final script verification matching ACK / NACK payload verification structures
-    if (m_serialPort->waitForReadyRead(2000)) {
-        QByteArray ack = m_serialPort->read(2);
-        qDebug() << "Final Verification Response Code:" << ack.toHex();
+    m_logWindow->appendPlainText("Transmission complete. Awaiting final MCU validation check...");
+    this->statusBar()->showMessage("Verifying final CRC check validation...");
+
+    // Evaluate final ACK/NACK status verification code from the controller
+    if (m_serialPort->waitForReadyRead(2000)) { // Increased slightly to accommodate chip process delay
+        QByteArray ack = m_serialPort->readAll();
+
+        // Log the raw confirmation response bytes
+        m_logWindow->appendPlainText(QString("RX <- Final Verification Code (Raw Hex): %1").arg(QString(ack.toHex(' ').toUpper())));
 
         if (ack.size() >= 2 && static_cast<quint8>(ack[0]) == 0xAA && static_cast<quint8>(ack[1]) == 0xBB) {
-            qDebug() << "Flashing Status: Success!";
+            m_logWindow->appendPlainText("RESULT: SUCCESS! [ACK Received (AA BB)] -> Firmware flashed and verified.");
             this->statusBar()->showMessage("Firmware Flash Successful!");
         } else if (ack.size() >= 2 && static_cast<quint8>(ack[0]) == 0xDE && static_cast<quint8>(ack[1]) == 0xAD) {
-            qDebug() << "Flashing Status: CRC Mismatch Failure!";
+            m_logWindow->appendPlainText("RESULT: FAILED! [NACK Received (DE AD)] -> CRC Checksum Mismatch.");
             this->statusBar()->showMessage("Flash Failed: CRC Checksum Mismatch.");
         } else {
-            qDebug() << "Flashing Status: Invalid target validation response.";
-            this->statusBar()->showMessage("Flash Failed: Unknown hardware response validation signature.");
+            m_logWindow->appendPlainText("RESULT: FAILED! Invalid target validation signature sequence received.");
+            this->statusBar()->showMessage("Flash Failed: Invalid hardware validation.");
         }
     } else {
-        qDebug() << "Timeout waiting for final transmission completion ACK.";
-        this->statusBar()->showMessage("Flash Failed: Transmission confirmation timeout.");
+        m_logWindow->appendPlainText("RX <- ERROR: Confirmation Timeout waiting for final validation ACK/NACK.");
+        this->statusBar()->showMessage("Flash Failed: Confirmation Timeout.");
     }
 
     m_serialPort->close();
