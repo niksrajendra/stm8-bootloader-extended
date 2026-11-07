@@ -1,6 +1,6 @@
 ## STM8S
-#MCU     ?= stm8s003f3
-MCU     ?= stm8s005k6
+MCU     ?= stm8s003f3
+#MCU     ?= stm8s005k6
 FAMILY  ?= STM8S
 
 ARCH     = stm8
@@ -45,11 +45,20 @@ CFLAGS +=$(addprefix -I,$(UNIQUE_DIRS))
 CFLAGS += --std-c11
 
 # --- ADD THIS LOGIC TO DEFINE THE TARGET MCU MACRO ---
+ifeq ($(MCU),stm8s001j3)
+    CFLAGS += -DCHIP_STM8S001J3
+endif
 ifeq ($(MCU),stm8s003f3)
     CFLAGS += -DCHIP_STM8S003F3
 endif
+ifeq ($(MCU),stm8s003k3)
+    CFLAGS += -DCHIP_STM8S003K3
+endif
 ifeq ($(MCU),stm8s005k6)
     CFLAGS += -DCHIP_STM8S005K6
+endif
+ifeq ($(MCU),stm8s005C6)
+    CFLAGS += -DCHIP_STM8S005C6
 endif
 ifeq ($(MCU),stm8s007c8)
     CFLAGS += -DCHIP_STM8S007C8
