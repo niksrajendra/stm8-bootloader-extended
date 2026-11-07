@@ -13,14 +13,28 @@ AS		= sdasstm8
 OBJCOPY =	sdobjcopy
 #SRCS=	./main.c
 #SRCS= $(wildcard *.c)
-SRC_DIR = .
+#SRC_DIR = .
 # Find all .c files recursively under SOURCEDIR
-SRCS := $(shell find $(SRC_DIR) -name '*.c')
-SRCasm := $(shell find $(SRC_DIR) -name '*.s')
-INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+#SRCS := $(shell find $(SRC_DIR) -name '*.c')
+#SRCasm := $(shell find $(SRC_DIR) -name '*.s')
+#INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+# --- NATIVE DEEP-NESTING CONFIGURATION ---
+SRC_DIR = .
+
+# A recursive wild card function to search infinitely deep paths natively
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
+# Discover files across deep folder architectures natively
+SRCS    := $(call rwildcard,$(SRC_DIR),*.c)
+SRCasm  := $(call rwildcard,$(SRC_DIR),*.s)
+HDRS    := $(call rwildcard,$(SRC_DIR),*.h)
+
+# Add the current directory '.' and extract unique directories from headers 
+INC_DIR     := . $(dir $(HDRS))
+UNIQUE_DIRS := $(sort $(INC_DIR))
 
 # Use sort to strip out duplicates
-UNIQUE_DIRS := $(sort $(INC_DIR))
+#UNIQUE_DIRS := $(sort $(INC_DIR))
 
 LIBS=	-lstm8 -mstm8
 IDIR=	../include
