@@ -12,7 +12,7 @@ A UART bootloader and firmware project for STM8S microcontrollers. The bootloade
 
 ## Requirements
 
-- GNU Make and an environment with `find` and `mkdir` (for example, MSYS2 or WSL on Windows).
+- GNU Make and an environment with `find` and `mkdir` (Git Bash, MSYS2, or WSL on Windows).
 - SDCC with the STM8 tools (`sdcc`, `sdasstm8`, and `sdobjcopy`) on `PATH`.
 - `stm8flash` for programming over an ST-Link V2.
 - Python 3 and PySerial for the command-line firmware updater.
@@ -22,6 +22,25 @@ Install PySerial with:
 ```sh
 python -m pip install pyserial
 ```
+
+### Windows Git Bash
+
+Git Bash provides the Unix-style shell commands used by the Makefiles, but it does not include GNU Make by default. Install Scoop if needed, then install Make from PowerShell:
+
+```powershell
+scoop install make
+```
+
+Close and reopen Git Bash, change to the repository root, and verify Make and the SDCC tools are available:
+
+```sh
+make --version
+command -v sdcc
+command -v sdasstm8
+command -v sdobjcopy
+```
+
+Install SDCC for Windows separately if those tools are not found, and add its `bin` directory to your Windows `PATH`. Then build from the repository root using the same targets shown below, for example `make MCU=stm8s003f3`. Git Bash paths use `/e/...` instead of Windows drive paths such as `E:\...`.
 
 ## Build
 
