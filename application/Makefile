@@ -11,13 +11,7 @@ CONFIG   ?= release
 CC		= sdcc
 AS		= sdasstm8
 OBJCOPY =	sdobjcopy
-#SRCS=	./main.c
-#SRCS= $(wildcard *.c)
-SRC_DIR = .
-# Find all .c files recursively under SOURCEDIR
-#SRCS := $(shell find $(SRC_DIR) -name '*.c')
-#SRCasm := $(shell find $(SRC_DIR) -name '*.s')
-#INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+
 # --- NATIVE DEEP-NESTING CONFIGURATION ---
 SRC_DIR = .
 
