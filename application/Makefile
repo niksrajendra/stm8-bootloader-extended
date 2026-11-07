@@ -14,6 +14,12 @@ OBJCOPY =	sdobjcopy
 
 # --- NATIVE DEEP-NESTING CONFIGURATION ---
 SRC_DIR = .
+# Find all .c files recursively under SOURCEDIR
+#SRCS := $(shell find $(SRC_DIR) -name '*.c')
+#SRCasm := $(shell find $(SRC_DIR) -name '*.s')
+#INC_DIR := $(dir $(shell find $(SRC_DIR) -name '*.h'))
+# --- NATIVE DEEP-NESTING CONFIGURATION ---
+SRC_DIR = .
 
 # A recursive wild card function to search infinitely deep paths natively
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
