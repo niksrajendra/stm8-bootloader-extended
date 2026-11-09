@@ -1,0 +1,98 @@
+name: Firmware CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.mcu }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mcu:
+          - stm8s001j3
+          - stm8s003f3
+          - stm8s003k3
+          - stm8s005k6
+          - stm8s005C6
+          - stm8s007c8
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y make sdcc cppcheck
+          command -v sdcc
+          command -v sdasstm8
+          command -v sdobjcopy
+
+      - name: Static analysis
+        env:
+          MCU: ${{ matrix.mcu }}
+        run: |
+          chip="CHIP_$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')"
+          include_args=()
+          while IFS= read -r -d '' dir; do
+            include_args+=("-I$dir")
+          done < <(find application bootloader -type d -print0)
+          cppcheck \
+            --enable=warning,performance,portability \
+            --error-exitcode=1 \
+            --std=c11 \
+            --language=c \
+            --suppress=missingIncludeSystem \
+            -DSTM8S \
+            -D"$chip" \
+            "${include_args[@]}" \
+            application bootloader
+
+      - name: Build bootloader and application
+        run: make MCU=${{ matrix.mcu }}
+
+      - name: Create binary firmware images
+        run: make MCU=${{ matrix.mcu }} binary
+
+      - name: Stage firmware artifacts
+        run: |
+          mkdir -p dist
+          cp bin/application/application.hex "dist/application-${{ matrix.mcu }}.hex"
+          cp bin/application/application.bin "dist/application-${{ matrix.mcu }}.bin"
+          cp bin/bootloader/bootloader.hex "dist/bootloader-${{ matrix.mcu }}.hex"
+          cp bin/bootloader/bootloader.bin "dist/bootloader-${{ matrix.mcu }}.bin"
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.mcu }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release-assets/* --title "$GITHUB_REF_NAME" --generate-notes

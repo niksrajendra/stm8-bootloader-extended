@@ -69,6 +69,10 @@ make binary MCU=stm8s003f3
 
 The application binary is `bin/application/application.bin`.
 
+## CI/CD
+
+GitHub Actions runs Cppcheck static analysis and builds the bootloader and application for all six supported MCUs on pushes, pull requests, and manual runs. The HEX and BIN files are available as workflow artifacts for 14 days. Pushing a version tag such as `v1.0.0` also creates a GitHub Release with the firmware files for each MCU attached.
+
 ## Program and Update
 
 Program the bootloader onto a blank device using an ST-Link V2:
