@@ -71,7 +71,7 @@ The application binary is `bin/application/application.bin`.
 
 ## CI/CD
 
-GitHub Actions runs Cppcheck static analysis and builds the bootloader and application for all six supported MCUs on pushes, pull requests, and manual runs. The HEX and BIN files are available as workflow artifacts for 14 days. Pushing a version tag such as `v1.0.0` also creates a GitHub Release with the firmware files for each MCU attached.
+GitHub Actions runs Cppcheck, including its MISRA C:2012 addon, for the three MCU platform configurations currently defined in `platform.h` (`stm8s003f3`, `stm8s005k6`, and `stm8s007c8`). Analyzer findings fail the corresponding analysis job. Cppcheck's `misra-config` diagnostic is suppressed because the addon cannot resolve some MCU-specific hardware symbols; MISRA rule findings remain enabled. The build matrix attempts all six MCU entries listed in the Makefiles. The HEX and BIN files are available as workflow artifacts for 14 days. Pushing a version tag such as `v1.0.0` also creates a GitHub Release with the firmware files for each MCU attached.
 
 ## Program and Update
 

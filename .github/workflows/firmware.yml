@@ -9,6 +9,48 @@ permissions:
   contents: read
 
 jobs:
+  static-analysis:
+    name: MISRA analysis (${{ matrix.mcu }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mcu:
+          - stm8s003f3
+          - stm8s005k6
+          - stm8s007c8
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y cppcheck
+
+      - name: Run Cppcheck and MISRA C:2012 checks
+        env:
+          MCU: ${{ matrix.mcu }}
+        run: |
+          chip="CHIP_$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')"
+          include_args=()
+          while IFS= read -r -d '' dir; do
+            include_args+=("-I$dir")
+          done < <(find application bootloader -type d -print0)
+          cppcheck \
+            --addon=misra \
+            --enable=warning,performance,portability \
+            --error-exitcode=1 \
+            --std=c11 \
+            --language=c \
+            --suppress=missingIncludeSystem \
+            --suppress=misra-config \
+            -DSTM8S \
+            -D"$chip" \
+            "${include_args[@]}" \
+            application bootloader
+
   build:
     name: Build ${{ matrix.mcu }}
     runs-on: ubuntu-24.04
@@ -30,30 +72,10 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y make sdcc cppcheck
+          sudo apt-get install --no-install-recommends -y make sdcc
           command -v sdcc
           command -v sdasstm8
           command -v sdobjcopy
-
-      - name: Static analysis
-        env:
-          MCU: ${{ matrix.mcu }}
-        run: |
-          chip="CHIP_$(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]')"
-          include_args=()
-          while IFS= read -r -d '' dir; do
-            include_args+=("-I$dir")
-          done < <(find application bootloader -type d -print0)
-          cppcheck \
-            --enable=warning,performance,portability \
-            --error-exitcode=1 \
-            --std=c11 \
-            --language=c \
-            --suppress=missingIncludeSystem \
-            -DSTM8S \
-            -D"$chip" \
-            "${include_args[@]}" \
-            application bootloader
 
       - name: Build bootloader and application
         run: make MCU=${{ matrix.mcu }}
@@ -80,7 +102,7 @@ jobs:
   release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, static-analysis]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
